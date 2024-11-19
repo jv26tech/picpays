@@ -1,15 +1,20 @@
 from http import HTTPStatus
 
 from fastapi import Depends, FastAPI, HTTPException
+from redis import Redis
+from rq import Queue, Retry
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from picpays.database import get_session
+from picpays.jobs import send_notification
 from picpays.models import User, UserRole
 from picpays.schemas import CreateUserSchema, TransferSchema
 from picpays.services import make_transfer
 
 app = FastAPI()
+redis_conn = Redis(host='localhost', port=6379)
+task_queue = Queue('task_queue', connection=redis_conn)
 
 
 @app.get('/')
@@ -94,4 +99,6 @@ def transfer(
         raise HTTPException(
             status_code=HTTPStatus.FORBIDDEN, detail='Transfer not authorized'
         )
+
+    task_queue.enqueue(send_notification, retry=Retry(max=5, interval=10))
     return transfer_db

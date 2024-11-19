@@ -30,5 +30,6 @@ def make_transfer(payer, payee, transfer_data, session):
         authorize_transfer()
         session.commit()
         session.refresh(transfer_db)
+        return transfer_db
     except Exception:
         session.rollback()

@@ -1,5 +1,4 @@
 import enum
-from typing import TypeAlias
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
@@ -14,7 +13,7 @@ class UserRole(enum.Enum):
     CUSTOMER = 'customer'
 
 
-class User(Base): #type:ignore
+class User(Base):  # type:ignore
     __tablename__ = 'users'
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -32,7 +31,7 @@ class User(Base): #type:ignore
         self.amount += amount
 
 
-class Transfer(Base): #type:ignore
+class Transfer(Base):  # type:ignore
     __tablename__ = 'transfer'
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -42,4 +41,3 @@ class Transfer(Base): #type:ignore
 
     payer: Mapped['User'] = relationship(foreign_keys=[payer_id])
     payee: Mapped['User'] = relationship(foreign_keys=[payee_id])
-
