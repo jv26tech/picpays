@@ -48,6 +48,12 @@ Ative o ambient virtual
   poetry shell 
 ```
 
+Efetue as migracoes do banco de dados
+
+```bash
+  alembic upgrade head 
+```
+
 Para inicializar o Redis Queue
 
 ```bash
