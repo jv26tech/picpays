@@ -26,7 +26,7 @@ def index():
     return {'hello': 'world'}
 
 
-@app.post('/users/', status_code=HTTPStatus.CREATED)
+@app.post('/user/', status_code=HTTPStatus.CREATED)
 def create_user(
     user: CreateUserSchema, session: Session = Depends(get_session)
 ):
