@@ -3,7 +3,7 @@
 
 Esse repositório implementa uma solução para o desafio [PicPay Simplificado](https://github.com/PicPay/picpay-desafio-backend?tab=readme-ov-file).
 
-
+![Swagger docs](picpays.png)
 
 
 ## Stack utilizada
