@@ -1,7 +1,7 @@
 import enum
 
 from sqlalchemy import ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import declarative_base, ConcreteBase
 from sqlalchemy.orm import Mapped, mapped_column, registry, relationship
 
 table_registry = registry()

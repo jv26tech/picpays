@@ -15,7 +15,7 @@ class CreateUserSchema(UserSchema):
     password: str
 
 
-class TransferSchema(BaseModel):
+class CreateTransferSchema(BaseModel):
     value: float
     payer: int
     payee: int

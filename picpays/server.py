@@ -3,14 +3,18 @@ from http import HTTPStatus
 from fastapi import Depends, FastAPI, HTTPException
 from redis import Redis
 from rq import Queue, Retry
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from picpays.database import get_session
 from picpays.jobs import send_notification
-from picpays.models import User, UserRole
-from picpays.schemas import CreateUserSchema, TransferSchema
-from picpays.services import make_transfer
+from picpays.schemas import CreateTransferSchema, CreateUserSchema
+from picpays.services import (
+    add_user,
+    check_user_balance,
+    check_user_role,
+    get_user_by_id,
+    make_transfer,
+)
 
 app = FastAPI()
 redis_conn = Redis(host='localhost', port=6379)
@@ -26,73 +30,25 @@ def index():
 def create_user(
     user: CreateUserSchema, session: Session = Depends(get_session)
 ):
-    db_user = session.scalar(
-        select(User).where(
-            (User.document == user.document) | (User.email == user.email)
-        )
-    )
-
-    if db_user:
-        if db_user.document == user.document:
-            raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST,
-                detail='Document already registered',
-            )
-        elif db_user.email == user.email:
-            raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST,
-                detail='Email already registered',
-            )
-
-    db_user = User(
-        name=user.name,
-        email=user.email,
-        password=user.password,
-        document=user.document,
-        role=user.role,
-        amount=user.amount,
-    )
-
-    session.add(db_user)
-    session.commit()
-    session.refresh(db_user)
+    db_user = add_user(user, session)
 
     return db_user
 
 
-@app.post('/transfer/')
+@app.post('/transfer/', status_code=HTTPStatus.CREATED)
 def transfer(
-    transfer_data: TransferSchema, session: Session = Depends(get_session)
+    transfer_data: CreateTransferSchema,
+    session: Session = Depends(get_session),
 ):
-    payer = session.scalar(
-        select(User).where((User.id == transfer_data.payer))
-    )
-
-    if not payer:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail='Payer does not exist'
-        )
+    payer = get_user_by_id(transfer_data.payer, session)
 
     # Check balance
-    if payer.amount < transfer_data.value:
-        raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN, detail='Not enough balance'
-        )
+    check_user_balance(payer, transfer_data.value)
 
     # Check role
-    if payer.role == UserRole.SELLER:
-        raise HTTPException(
-            status_code=HTTPStatus.FORBIDDEN,
-            detail='Payer does not have enough permissions',
-        )
+    check_user_role(payer)
 
-    payee = session.scalar(
-        select(User).where((User.id == transfer_data.payee))
-    )
-    if not payee:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail='Payee does not exist'
-        )
+    payee = get_user_by_id(transfer_data.payee, session)
 
     transfer_db = make_transfer(payer, payee, transfer_data, session)
     if not transfer_db:
