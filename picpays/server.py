@@ -16,7 +16,7 @@ from picpays.services import (
     make_transfer,
 )
 
-app = FastAPI()
+app = FastAPI(title='PicPay Simplificado')
 redis_conn = Redis(host='localhost', port=6379)
 task_queue = Queue('task_queue', connection=redis_conn)
 
